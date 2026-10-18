@@ -1,8 +1,12 @@
 package itm.oss.booking;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -15,8 +19,46 @@ public final class BookingStore {
      * Issue 9.
      */
     public static List<Booking> load(Path path) {
-        throw new UnsupportedOperationException(
-                "Issue 9: BookingStore.load() is not implemented yet");
+        List<Booking> result = new ArrayList<>();
+
+        //null path, missing file, empty file -> return empty list
+        if (path == null || Files.notExists(path)) {
+            return  result;
+        }
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String row : lines) {
+                
+                //trim and skip if row is blank
+                row = row.trim();
+                if(row.isBlank()){
+                    continue;
+                }
+                
+                //skip if is header
+                String[] userInfo = row.split(",",-1);
+                if(userInfo.length == numOfCol) {
+                    for( int i =0; i< numOfCol ; i++) {
+                        userInfo[i] = userInfo[i].trim();
+                    }
+                    if(String.join(",",userInfo).equals("id,userId,roomId,start,end,attendees,purpose,status")){
+                        continue;    
+                    }
+                }
+                
+                Booking booking=parseBooking(row);
+                
+                if(booking !=null) {
+                    result.add(booking);
+                } 
+
+            }   
+        }catch(IOException e) {
+            return  result;
+        }
+            
+        
+        return result;
     }
 
     /*
